@@ -76,7 +76,7 @@ struct LogRotateHelper {
    std::string log_directory_;
    std::string log_prefix_backup_;
    std::unique_ptr<std::ofstream> outptr_;
-   steady_time_point steady_start_time_;
+   steady_time_point steady_start_time_; // std::chrono::time_point<std::chrono::steady_clock>;
    int max_log_size_;
    int max_archive_log_count_;
    std::streamoff cur_log_size_;
@@ -95,7 +95,8 @@ LogRotateHelper::LogRotateHelper(const std::string& log_prefix, const std::strin
    log_prefix_backup_ = prefixSanityFix(log_prefix);
    max_log_size_ = 524288000;
    max_archive_log_count_ = 10;
-   if (!isValidFilename(log_prefix_backup_)) {
+   // if (!isValidFilename(log_prefix_backup_)) {
+   if (log_prefix_backup_.empty()) {
       std::cerr << "g3log: forced abort due to illegal log prefix [" << log_prefix << "]" << std::endl;
       abort();
    }
@@ -116,7 +117,6 @@ int LogRotateHelper::getMaxArchiveLogCount() {
    return max_archive_log_count_;
 }
 
-
 /**
  * Set the max file size in bytes.
  * @param max_size
@@ -128,10 +128,6 @@ void LogRotateHelper::setMaxLogSize(int max_size) {
 int LogRotateHelper::getMaxLogSize() {
    return max_log_size_;
 }
-
-
-
-
 
 LogRotateHelper::~LogRotateHelper() {
    std::ostringstream ss_exit;
@@ -173,6 +169,9 @@ void LogRotateHelper::setFlushPolicy(size_t flush_policy) {
 
 
 void LogRotateHelper::flush() {
+   // using std::flush causes the stream buffer to flush its output buffer. 
+   // For example, when data is written to a console flushing causes the 
+   // characters to appear at this point on the console.
    filestream() << std::flush;
 }
 
@@ -244,7 +243,27 @@ bool LogRotateHelper::rotateLog() {
 */
 void LogRotateHelper::setLogSizeCounter() {
    std::ofstream& is(filestream());
+   // std::ostream::seekp
+   // ostream& seekp (streamoff off, ios_base::seekdir way);
+   // Sets the position where the next character is to be inserted into the 
+   // output stream.
+   // @param off -- Offset value, relative to the way parameter. streamoff 
+   //               is an offset type(generally, a signed integral type).
+   // @param way -- Object of type ios_base::seekdir. It may take any of the
+   //               following constant values:
+   // value	             offset is relative to...
+   // ios_base::beg      beginning of the stream
+   // ios_base::cur      current position in the stream
+   // ios_base::end	     end of the stream
+   // Return Value -- The ostream object (*this).
    is.seekp(0, std::ios::end);
+   // std::ostream::tellp
+   // streampos tellp();
+   // Returns the position of the current character in the output stream.
+   // Return Value -- The current position in the stream. If either the stream
+   //                 buffer associated to the stream does not support the 
+   //                 operation, or if it fails, the function returns -1.
+   // streampos is an fpos type(it can be converted to / from integral types).
    cur_log_size_ = is.tellp();
    is.seekp(0, std::ios::beg);
    flush_policy_counter_ = flush_policy_;
@@ -275,7 +294,6 @@ bool LogRotateHelper::createCompressedFile(std::string file_name, std::string gz
    close_status = (fclose(input) == 0)  && close_status;
 
    return close_status;
-
 }
 
 std::string LogRotateHelper::logFileName() {

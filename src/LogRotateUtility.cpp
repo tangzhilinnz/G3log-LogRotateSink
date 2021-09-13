@@ -362,7 +362,7 @@ namespace  LogRotateUtility {
          // managed by out and out becomes empty, managing no object after the call.
          // std::unique_ptr<T, Deleter>::operator bool
          // true if out owns an object, false otherwise.
-         out.reset(nullptr);
+         out.reset(nullptr); // out.get() == nullptr && out == nullptr
       }
       return out;
    }
