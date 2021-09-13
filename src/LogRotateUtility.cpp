@@ -17,7 +17,7 @@
 #include <g3log/time.hpp>
 #include <regex>
 //#include <boost/filesystem.hpp>
-#include <filesystem> // Converting from Boost to std::filesystem C++ 17
+#include <filesystem> // Converting from Boost::filesystem to std::filesystem C++ 17
 #include <ios>
 #include <fstream>
 #include <iomanip>
@@ -68,15 +68,15 @@ namespace  LogRotateUtility {
 #endif
 
 
-   // check for filename validity -  filename should not be part of PATH
+   // check for filename validity - filename should not be part of PATH
    bool isValidFilename(const std::string& prefix_filename) {
-      std::string illegal_characters("/,|<>:#$%{}()[]\'\"^!?+* ");
+      std::string illegal_characters("/,|<>:#$%{}()[]\'\"^!?+* "); // ==== differnt ====
       size_t pos = prefix_filename.find_first_of(illegal_characters, 0);
       if (pos != std::string::npos) {
          std::cerr << "Illegal character [" << prefix_filename.at(pos) << "] in logname prefix: " 
                    << "[" << prefix_filename << "]" << std::endl;
          return false;
-      } else if (prefix_filename.empty()) {
+      } else if (prefix_filename.empty()) { // pos == std::string::npos
          std::cerr << "Empty filename prefix is not allowed" << std::endl;
          return false;
       }
@@ -100,7 +100,7 @@ namespace  LogRotateUtility {
 
 
    /// @return the file header
-   std::string header() {
+   std::string header() { // ==== differnt ====
       std::ostringstream ss_entry;
       // Day Month Date Time Year: is written as "%a %b %d %H:%M:%S %Y" 
       // and formatted output as : Wed Sep 19 08:28:16 2012
@@ -151,7 +151,7 @@ namespace  LogRotateUtility {
          // sm[n] -- ssub_match object corresponding to the nth subexpression
          // sm.begin(), sm.end() -- Iterators across the ssub_match elements in sm. 
          // sm.cbegin(), sm.cend() -- As usual, cbegin and cend return const_iterators
-         // a few aspects of the ECMAScript regular - expression language:
+         // A few aspects of the ECMAScript regular - expression language:
          // 1) \\{d} represents a single digit and \\{d}{n} represents a sequence of n digits
          // 2) A collection of characters inside square brackets allows a match to any of those
          //    characters. (E.g., [-.] matches a dash, a dot, or a space.Note that a dot has no
@@ -207,7 +207,7 @@ namespace  LogRotateUtility {
    }
 
 
-   std::string createPath(std::string path, std::string file_name) {
+   std::string createPath(std::string path, std::string file_name) { // ==== differnt ====
       // Unify the delimeters,. maybe sketchy solution but it seems to work
       // on at least win7 + ubuntu. All bets are off for older windows
       std::replace(path.begin(), path.end(), '\\', '/');
@@ -337,7 +337,7 @@ namespace  LogRotateUtility {
    /// @param outstream is the file stream
    bool openLogFile(const std::string& complete_file_with_path, std::ofstream& outstream) {
       std::ios_base::openmode mode = std::ios_base::out; // for clarity: it's really overkill since it's an ofstream
-      mode |= std::ios_base::app;
+      mode |= std::ios_base::app; // ==== differnt ====
       outstream.open(complete_file_with_path, mode);
       if (!outstream.is_open()) {
          std::ostringstream ss_error;
@@ -357,7 +357,12 @@ namespace  LogRotateUtility {
       std::ofstream& stream(*(out.get()));
       bool success_with_open_file = openLogFile(file_with_full_path, stream);
       if (false == success_with_open_file) {
-         out.release();
+         // out.release();
+         // out.reset(nullptr) destroys the dynamic std::ofstream object currently 
+         // managed by out and out becomes empty, managing no object after the call.
+         // std::unique_ptr<T, Deleter>::operator bool
+         // true if out owns an object, false otherwise.
+         out.reset(nullptr);
       }
       return out;
    }
