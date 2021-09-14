@@ -84,11 +84,12 @@ struct LogRotateHelper {
    size_t flush_policy_counter_;
 };
 
+
 LogRotateHelper::LogRotateHelper(const std::string& log_prefix, const std::string& log_directory, size_t flush_policy)
    : log_file_with_path_(log_directory)
    , log_directory_(log_directory)
    , log_prefix_backup_(log_prefix)
-   , outptr_(new std::ofstream)
+   //, outptr_(new std::ofstream)
    , steady_start_time_(std::chrono::steady_clock::now())
    , flush_policy_(flush_policy)
    , flush_policy_counter_(flush_policy) {
@@ -102,8 +103,10 @@ LogRotateHelper::LogRotateHelper(const std::string& log_prefix, const std::strin
    }
 
    auto logfile = changeLogFile(log_directory, log_prefix_backup_);
-   assert((nullptr != outptr_) && "cannot open log file at startup");
+   // assert((nullptr != outptr_) && "cannot open log file at startup");
+   assert((!logfile.empty()) && "cannot open log file at startup");
 }
+
 
 /**
  * Max number of archived logs to keep.
@@ -113,9 +116,11 @@ void LogRotateHelper::setMaxArchiveLogCount(int max_size) {
    max_archive_log_count_ = max_size;
 }
 
+
 int LogRotateHelper::getMaxArchiveLogCount() {
    return max_archive_log_count_;
 }
+
 
 /**
  * Set the max file size in bytes.
@@ -125,16 +130,30 @@ void LogRotateHelper::setMaxLogSize(int max_size) {
    max_log_size_ = max_size;
 }
 
+
 int LogRotateHelper::getMaxLogSize() {
    return max_log_size_;
 }
 
+
 LogRotateHelper::~LogRotateHelper() {
-   std::ostringstream ss_exit;
+   //std::ostringstream ss_exit;
+   //auto now = std::chrono::system_clock::now();
+   //ss_exit << "\ng3log file shutdown at: " << g3::localtime_formatted(now, g3::internal::time_formatted) << "\n\n";
+   //filestream() << ss_exit.str() << std::flush;
+
+   std::string exit_msg{ "g3log g3LogRotateSink shutdown at: " };
    auto now = std::chrono::system_clock::now();
-   ss_exit << "\ng3log file shutdown at: " << g3::localtime_formatted(now, g3::internal::time_formatted) << "\n\n";
-   filestream() << ss_exit.str() << std::flush;
+   exit_msg.append(g3::localtime_formatted(now, { g3::internal::date_formatted + " " + g3::internal::time_formatted })).append("\n");
+   filestream() << exit_msg << std::flush;
+
+   exit_msg.append("Log file at: [").append(log_file_with_path_).append("]\n");
+   std::cerr << exit_msg << std::flush;
+   // std::unique_ptr<std::ofstream> outptr_;
+   // Note that any open file is automatically closed when the ofstream 
+   // object outptr_ is destroyed as if std::ofstream::close() is called
 }
+
 
 void LogRotateHelper::fileWrite(std::string message) {
    if (cur_log_size_ > max_log_size_) {
@@ -143,13 +162,13 @@ void LogRotateHelper::fileWrite(std::string message) {
    fileWriteWithoutRotate(message);
 }
 
+
 void LogRotateHelper::fileWriteWithoutRotate(std::string message) {
    std::ofstream& out(filestream());
    out << message;
    flushPolicy();
    cur_log_size_ += message.size();
 }
-
 
 
 void LogRotateHelper::flushPolicy() {
@@ -176,7 +195,6 @@ void LogRotateHelper::flush() {
 }
 
 
-
 std::string LogRotateHelper::changeLogFile(const std::string& directory, const std::string& new_name) {
    std::string file_name = new_name;
    if (file_name.empty()) {
@@ -187,7 +205,8 @@ std::string LogRotateHelper::changeLogFile(const std::string& directory, const s
    prospect_log = addLogSuffix(prospect_log);
 
    std::unique_ptr<std::ofstream> log_stream = createLogFile(prospect_log);
-   if (nullptr == log_stream) {
+   // if (nullptr == log_stream) {
+   if (!log_stream) {
       fileWrite("Unable to change log file. Illegal filename or busy? Unsuccessful log name was:" + prospect_log);
       return ""; // no success
    }
@@ -201,6 +220,7 @@ std::string LogRotateHelper::changeLogFile(const std::string& directory, const s
 
    return log_file_with_path_;
 }
+
 
 /**
  * Rotate the logs once they have exceeded our set size.

@@ -89,6 +89,6 @@ int LogRotate::getMaxLogSize() {
    return pimpl_->getMaxLogSize();
 }
 
-bool LogRotate::rotateLog(){
+bool LogRotate::rotateLog() {
     return pimpl_->rotateLog();
 }

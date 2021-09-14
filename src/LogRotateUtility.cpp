@@ -336,8 +336,14 @@ namespace  LogRotateUtility {
    /// @return true if @param complete_file_with_path could be opened
    /// @param outstream is the file stream
    bool openLogFile(const std::string& complete_file_with_path, std::ofstream& outstream) {
+      // std::ios_base::app      seek to the end of stream before each write
+      // std::ios_base::binary   open in binary mode
+      // std::ios_base::in       open for reading
+      // std::ios_base::out	     open for writing
+      // std::ios_base::trunc    discard the contents of the stream when opening
+      // std::ios_base::ate      seek to the end of stream immediately after open
       std::ios_base::openmode mode = std::ios_base::out; // for clarity: it's really overkill since it's an ofstream
-      mode |= std::ios_base::app; // ==== differnt ====
+      mode |= std::ios_base::app;
       outstream.open(complete_file_with_path, mode);
       if (!outstream.is_open()) {
          std::ostringstream ss_error;
@@ -362,7 +368,7 @@ namespace  LogRotateUtility {
          // managed by out and out becomes empty, managing no object after the call.
          // std::unique_ptr<T, Deleter>::operator bool
          // true if out owns an object, false otherwise.
-         out.reset(nullptr); // out.get() == nullptr && out == nullptr
+         out.reset(nullptr); // out.get() == nullptr
       }
       return out;
    }
