@@ -290,7 +290,7 @@ namespace  LogRotateUtility {
       // pointer one past the end of the array) may be subtracted from each other.
       ptrdiff_t logs_to_delete = files.size() - max_log_count;
       if (logs_to_delete > 0) {
-
+         // std::map is already sorted in ascending order of keys(time)
          for (std::map<long, std::string>::iterator it = files.begin(); it != files.end(); ++it) {
             if (logs_to_delete <= 0) {
                break;

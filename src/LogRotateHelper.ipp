@@ -102,7 +102,7 @@ LogRotateHelper::LogRotateHelper(const std::string& log_prefix, const std::strin
       abort();
    }
 
-   auto logfile = changeLogFile(log_directory, log_prefix_backup_);
+   std::string logfile = changeLogFile(log_directory, log_prefix_backup_);
    // assert((nullptr != outptr_) && "cannot open log file at startup");
    assert((!logfile.empty()) && "cannot open log file at startup");
 }
@@ -201,6 +201,9 @@ std::string LogRotateHelper::changeLogFile(const std::string& directory, const s
       file_name = log_prefix_backup_;
    }
 
+   // e.g., file_name -- "tangzhilin"
+   //       directory -- "/my_log_dir/ //"
+   //       prospect_log -- "/my_log_dir/tangzhilin.log"
    auto prospect_log = createPath(directory, file_name);
    prospect_log = addLogSuffix(prospect_log);
 
@@ -210,10 +213,11 @@ std::string LogRotateHelper::changeLogFile(const std::string& directory, const s
       fileWrite("Unable to change log file. Illegal filename or busy? Unsuccessful log name was:" + prospect_log);
       return ""; // no success
    }
-   log_prefix_backup_ = file_name;
-   log_file_with_path_ = prospect_log;
+   log_prefix_backup_ = file_name;     // "tangzhilin"
+   log_file_with_path_ = prospect_log; // "/my_log_dir/tangzhilin.log"
+   log_directory_ = directory;         // "/my_log_dir/ //"
+
    outptr_ = std::move(log_stream);
-   log_directory_ = directory;
 
    addLogFileHeader();
    setLogSizeCounter();
