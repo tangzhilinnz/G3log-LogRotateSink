@@ -61,7 +61,7 @@ struct LogRotateHelper {
 
    std::string changeLogFile(const std::string& directory, const std::string& new_name = "");
    std::string logFileName();
-   bool archiveLog();
+   //bool archiveLog();
 
 
    void addLogFileHeader();
@@ -202,7 +202,7 @@ std::string LogRotateHelper::changeLogFile(const std::string& directory, const s
    }
 
    // e.g., file_name -- "tangzhilin"
-   //       directory -- "/my_log_dir/ //"
+   //       directory -- "/my_log_dir///  "
    //       prospect_log -- "/my_log_dir/tangzhilin.log"
    auto prospect_log = createPath(directory, file_name);
    prospect_log = addLogSuffix(prospect_log);
@@ -215,7 +215,7 @@ std::string LogRotateHelper::changeLogFile(const std::string& directory, const s
    }
    log_prefix_backup_ = file_name;     // "tangzhilin"
    log_file_with_path_ = prospect_log; // "/my_log_dir/tangzhilin.log"
-   log_directory_ = directory;         // "/my_log_dir/ //"
+   log_directory_ = directory;         // "/my_log_dir///  "
 
    outptr_ = std::move(log_stream);
 
@@ -232,13 +232,19 @@ std::string LogRotateHelper::changeLogFile(const std::string& directory, const s
  */
 bool LogRotateHelper::rotateLog() {
    std::ofstream& is(filestream());
+   // std::fstream::is_open
+   // Returns whether the stream is currently associated to a file.
+   // Streams can be associated to files by a successful call to member open 
+   // or directly on construction, and disassociated by calling close or on 
+   // destruction. The file association of a stream is kept by its internal 
+   // stream buffer: Internally, the function calls rdbuf()->is_open()
    if (is.is_open()) {
       is << std::flush;
       std::ostringstream gz_file_name;
       gz_file_name << log_file_with_path_ << ".";
       auto now = std::chrono::system_clock::now();
       gz_file_name << g3::localtime_formatted(now, "%Y-%m-%d-%H-%M-%S");
-      gz_file_name << ".gz";
+      gz_file_name << ".gz"; // "/my_log_dir/tangzhilin.log.%Y-%m-%d-%H-%M-%S.gz"
       if (!createCompressedFile(log_file_with_path_, gz_file_name.str())) {
          fileWriteWithoutRotate("Failed to compress log!");
          return false;
@@ -247,13 +253,13 @@ bool LogRotateHelper::rotateLog() {
       if (remove(log_file_with_path_.c_str()) == -1) {
          fileWriteWithoutRotate("Failed to remove old log!");
       }
-      changeLogFile(log_directory_);
+      changeLogFile(log_directory_); // log_directory_ -- "/my_log_dir///  "
       std::ostringstream ss;
       ss << "Log rotated Archived file name: " << gz_file_name.str().c_str() << "\n";
       fileWriteWithoutRotate(ss.str());
       ss.clear();
       ss.str("");
-      ss << log_prefix_backup_ << ".log";
+      ss << log_prefix_backup_ << ".log"; // ss.str() -- "tangzhilin.log"
       expireArchives(log_directory_, ss.str(), max_archive_log_count_);
       return true;
    }

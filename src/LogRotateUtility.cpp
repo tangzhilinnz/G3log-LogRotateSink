@@ -237,6 +237,7 @@ namespace  LogRotateUtility {
     * @param dir
     * @param file_name
     */
+   // TODO, no need to check and record archiving time each entry through this func 
    void expireArchives(const std::string& dir, const std::string& app_name, unsigned long max_log_count) {
       std::map<long, std::string> files;
       // Constructs the path from a character sequence 

@@ -15,14 +15,13 @@
 
 
 /// @param log_prefix to use for the file
-LogRotate::LogRotate(const std::string& log_prefix, const std::string& log_directory)    : pimpl_(new LogRotateHelper(log_prefix, log_directory))
+LogRotate::LogRotate(const std::string& log_prefix, const std::string& log_directory)
+   : pimpl_(new LogRotateHelper(log_prefix, log_directory))
 {}
 
-
 LogRotate::~LogRotate() {
-    std::cerr << "\nExiting, log location: " << pimpl_->log_file_with_path_ << std::endl;
+    //std::cerr << "\nExiting, log location: " << pimpl_->log_file_with_path_ << std::endl;
 }
-
 
 /// @param logEntry to write to file
 void LogRotate::save(std::string logEntry) {
@@ -62,7 +61,7 @@ int LogRotate::getMaxArchiveLogCount() {
 * 0: System decides, potentially very long time
 * 1....N: Flush logs every n entry 
 */
-void LogRotate::setFlushPolicy(size_t flush_policy){
+void LogRotate::setFlushPolicy(size_t flush_policy) {
 	pimpl_->setFlushPolicy(flush_policy);
 }
 
@@ -71,11 +70,9 @@ void LogRotate::setFlushPolicy(size_t flush_policy){
 * but is great for unit testing and if there are special circumstances where you want to see
 * the logs faster than the flush_policy
 */
-void LogRotate::flush(){
+void LogRotate::flush() {
 	pimpl_->flush();
 }
-
-
 
 /**
  * Set the max log size in bytes.
